@@ -42,79 +42,83 @@
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2.5);
+  --radius-4xl: calc(var(--radius) * 3);
 }
 
+/* Apple-style: clean white base, generous radius, ultra-light borders */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --background: oklch(0.98 0 0);         /* near-white page bg */
+  --foreground: oklch(0.12 0 0);         /* near-black text */
+  --card: oklch(1 0 0);                  /* pure white cards */
+  --card-foreground: oklch(0.12 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.12 0 0);
+  --primary: oklch(0.14 0 0);            /* near-black primary */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0 0);          /* light gray surface */
+  --secondary-foreground: oklch(0.3 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.94 0 0);
+  --accent-foreground: oklch(0.14 0 0);
+  --destructive: oklch(0.62 0.22 27);
+  --border: oklch(0.91 0 0);             /* very subtle border */
+  --input: oklch(0.93 0 0);
+  --ring: oklch(0.6 0 0);
+  --chart-1: oklch(0.5 0.18 264);
+  --chart-2: oklch(0.65 0.15 145);
+  --chart-3: oklch(0.7 0.16 35);
+  --chart-4: oklch(0.6 0.18 300);
+  --chart-5: oklch(0.55 0.2 20);
+  --radius: 0.75rem;                     /* 12px - Apple's preferred radius */
+  --sidebar: oklch(0.975 0 0);           /* barely-off-white sidebar */
+  --sidebar-foreground: oklch(0.20 0 0);
+  --sidebar-primary: oklch(0.14 0 0);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.92 0 0);
+  --sidebar-accent-foreground: oklch(0.14 0 0);
+  --sidebar-border: oklch(0.90 0 0);
+  --sidebar-ring: oklch(0.6 0 0);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Modern Dark Mode - Deep Slate/Zinc */
+  --background: oklch(0.14 0.01 260);    /* deep dark slate */
+  --foreground: oklch(0.98 0 0);         /* crisp white text */
+  --card: oklch(0.17 0.01 260);          /* slightly elevated surface */
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.17 0.01 260);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.98 0 0);            /* pristine white primary */
+  --primary-foreground: oklch(0.12 0.01 260);
+  --secondary: oklch(0.22 0.01 260);     /* elevated interaction state */
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.20 0.01 260);         /* subtle muted fields */
+  --muted-foreground: oklch(0.65 0.02 260); 
+  --accent: oklch(0.22 0.01 260);        /* hover state */
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.70 0.15 22);    /* vibrant red */
+  --border: oklch(0.25 0.01 260);        /* sharp visible borders */
+  --input: oklch(0.22 0.01 260);         /* deep input background */
+  --ring: oklch(0.80 0.05 260);          /* bright focus ring */
+  
+  --chart-1: oklch(0.6 0.18 264);
+  --chart-2: oklch(0.65 0.15 145);
+  --chart-3: oklch(0.7 0.16 35);
+  --chart-4: oklch(0.6 0.18 300);
+  --chart-5: oklch(0.55 0.2 20);
+  
+  --sidebar: oklch(0.15 0.01 260);       /* distinct sidebar layer */
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.98 0 0);
+  --sidebar-primary-foreground: oklch(0.12 0.01 260);
+  --sidebar-accent: oklch(0.20 0.01 260);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.22 0.01 260);
+  --sidebar-ring: oklch(0.5 0 0);
 }
 
 @layer base {
@@ -123,8 +127,98 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Apple-style smooth transitions everywhere */
+@layer utilities {
+  .apple-card {
+    @apply bg-white dark:bg-card/70 dark:backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_2px_16px_0_rgba(0,0,0,0.04)] dark:border-white/[0.05] dark:shadow-[insert_0_1px_0_rgba(255,255,255,0.05),_0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-300;
+  }
+  .apple-card:hover {
+    @apply shadow-[0_4px_24px_0_rgba(0,0,0,0.08)] dark:bg-card/90 dark:shadow-[insert_0_1px_0_rgba(255,255,255,0.08),_0_12px_48px_rgba(0,0,0,0.6)] dark:border-white/[0.08] dark:-translate-y-[1px];
+  }
+
+  /* --- Staggered fade-up entrance animation -------------------------------- */
+  /* Usage: add .animate-stagger-item to each item, and set
+     style={{ '--i': index }} on the item to control stagger delay.          */
+  .animate-stagger-item {
+    opacity: 0;
+    animation: fade-up-in 0.4s ease forwards;
+    animation-delay: calc(var(--i, 0) * 60ms + 50ms);
+  }
+
+  @keyframes fade-up-in {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0)   scale(1);    }
+  }
+
+  /* --- Smooth slide-down for page headings --------------------------------- */
+  .animate-heading {
+    animation: slide-down-fade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slide-down-fade {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0);     }
+  }
+
+  /* --- Skeleton shimmer ---------------------------------------------------- */
+  .skeleton {
+    @apply bg-muted rounded-lg;
+    background: linear-gradient(
+      90deg,
+      oklch(0.93 0 0) 25%,
+      oklch(0.97 0 0) 50%,
+      oklch(0.93 0 0) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite ease-in-out;
+  }
+  .dark .skeleton {
+    background: linear-gradient(
+      90deg,
+      oklch(0.20 0.01 260) 25%,
+      oklch(0.24 0.01 260) 50%,
+      oklch(0.20 0.01 260) 75%
+    );
+    background-size: 200% 100%;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* --- Live dot pulse ------------------------------------------------------ */
+  .live-dot {
+    @apply h-2 w-2 rounded-full bg-emerald-500;
+    animation: live-pulse 1.8s cubic-bezier(0.4,0,0.6,1) infinite;
+  }
+
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.75); }
+  }
+
+  /* --- Scale-in for dialog/modal entry ------------------------------------ */
+  .animate-scale-in {
+    animation: scale-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.95) translateY(6px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);   }
+  }
+
+  /* --- Number count-up shimmer highlight ---------------------------------- */
+  .stat-value {
+    @apply tabular-nums;
+    animation: fade-up-in 0.5s ease both;
   }
 }
