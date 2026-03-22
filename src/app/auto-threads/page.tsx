@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Sparkles, BrainCircuit, PenTool, BarChart2, Loader2, Save, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
+import { Sparkles, BrainCircuit, PenTool, BarChart2, Loader2, Save, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Copy, Check, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -45,7 +45,7 @@ export default function AutoThreadsPage() {
   
   const [accounts, setAccounts] = useState<Account[]>([])
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'post' | 'metrics'>('post')
+  const [activeTab, setActiveTab] = useState<'post' | 'image' | 'metrics'>('post')
   const [postLanguage, setPostLanguage] = useState<'id' | 'en'>('id')
   const [postCount, setPostCount] = useState<number>(1)
 
@@ -55,6 +55,16 @@ export default function AutoThreadsPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+  const [imagePrompts, setImagePrompts] = useState<Record<string, string>>({})
+  const [copiedPrompt, setCopiedPrompt] = useState(false)
+  const [bgStyle, setBgStyle] = useState<string>('white-studio')
+  const [artStyle, setArtStyle] = useState<string>('realistic')
+  const [characterType, setCharacterType] = useState<string>('human')
+  const [characterGender, setCharacterGender] = useState<string>('any')
+  const [customCharacterStyle, setCustomCharacterStyle] = useState<string>('')
+  const [customCharacterOutfit, setCustomCharacterOutfit] = useState<string>('')
+  const [isNegativeMode, setIsNegativeMode] = useState(false)
 
   // Fetch currently logged in user profile_id equivalent
   useEffect(() => {
@@ -235,6 +245,91 @@ Do NOT use the same Hook -> Feature -> CTA structure for all. Give each variatio
     } finally {
       setIsEvaluating(false)
     }
+  }
+
+  const handleGenerateImagePrompt = async () => {
+    if (!activePost || !selectedAccountId) return
+    const postContent = activePost.content || ''
+    if (!postContent.trim()) return
+
+    setIsGeneratingImage(true)
+
+    const artStyles: Record<string, string> = {
+      'realistic':  'photorealistic, highly detailed, cinematic lighting, 8k photography, ultra-realistic textures',
+      'disney':     'Disney Pixar 3D animation style, cute, expressive, vibrant colors, soft stylized lighting, smooth render, magical feel',
+      'cyberpunk':  'cyberpunk aesthetic, synthwave styling, neon glow, futuristic tech wear, moody cinematic',
+      'minimal':    'vector flat art style, minimal, bold shapes, solid colors, clean modern illustration',
+    }
+    const charStyles: Record<string, string> = {
+      'human':   `an ultra-realistic, highly expressive Asian ${characterGender === 'any' ? 'creator/entrepreneur' : characterGender} in their early 20s. ${customCharacterOutfit ? `Outfit: ${customCharacterOutfit}.` : 'Wearing modern casual stylish streetwear.'} The pose must be highly dynamic, relatable, and natural (e.g., confidently gesturing, leaning in with excitement, or casually resting on the desk) — absolutely no stiff or passport-photo poses. ${customCharacterStyle ? `Specific details and pose: ${customCharacterStyle}.` : ''}`,
+      'mascot':  `a cute highly-expressive animal or robot mascot (e.g., a smart owl, a cool dog, or a friendly small robot). ${customCharacterOutfit ? `Outfit/Accessories: ${customCharacterOutfit}.` : ''} ${customCharacterStyle ? `Specific pose/details: ${customCharacterStyle}.` : ''}`,
+      'none':    '(No human or character in the scene, focus entirely on the product/laptop)',
+    }
+
+    const bgDescriptions: Record<string, string> = {
+      'white-studio':  'pure white seamless studio background, soft diffused overhead light, no shadows, clean and clinical',
+      'dark-studio':   'deep charcoal / near-black studio background, subtle rim lighting, slight vignette, moody and premium',
+      'warm-minimal':  'warm off-white linen texture background, soft warm morning light from the side, cozy yet minimal',
+      'outdoor-cafe':  'blurred upscale café background, bokeh windows, soft natural daylight, shallow depth of field',
+      'gradient-mono': 'smooth monochromatic gradient background from light grey to white, absolutely flat and clean',
+      'concrete-loft': 'raw concrete texture background, industrial loft feel, cool neutral tones, diffused overcast light',
+    }
+    const selectedStyle = artStyles[artStyle] ?? artStyles['realistic']
+    const selectedChar  = charStyles[characterType] ?? charStyles['human']
+    const selectedBg    = bgDescriptions[bgStyle]   ?? bgDescriptions['white-studio']
+
+    const system = `You are a premium creative director specializing in high-conversion social media advertising.
+Your task: given a social media post, output a SINGLE valid JSON object (no markdown fences, no text outside the JSON) for use in an AI image generator like banana.google.
+
+CRITICAL DESIGN RULES — Follow exactly:
+
+1. "style": "High-end product advertisement flyer. Art style: ${selectedStyle}. Composition: generous negative space, visually striking, professional flair, uncluttered."
+2. "font": REQUIRED → "Poppins for body/sub-text, Sugo Display (or bold geometric sans-serif) for headlines — clean, generous tracking, NO decorative or script fonts"
+3. "typography_style": "Poppins Regular for sub-text and CTA, Sugo Display Bold for main headline, NO drop shadows, NO gradients on text, tight and punchy layout"
+4. "character": "${selectedChar}. Make them the emotional anchor if present."
+5. "background": "${selectedBg}"
+6. "scene": "Product (thin laptop showing video software) + character (if any) + background. Seamless integration."
+7. "mood": "catchy, energetic, scroll-stopping, confident."
+8. "pricing_typography": "IF the post mentions a price, force formatting to exactly 'Rp 100.000' (or specific number). CRITICAL: DO NOT put the price inside a clunky box, starburst, or ugly badge. Integrate the price elegantly as sleek floating text or as a seamless part of the modern typography layout. Make it look premium, clean, and aesthetic."
+9. "main_text": ${isNegativeMode ? `"Max 8 words. AGGRESSIVE COMPARISON CTA. Highlight that other tools are a $20/month subscription rip-off, while this tool is way cheaper/one-time payment."` : `"Max 6 words. CATCHY and PUNCHY. NEVER formal/kaku. Use casual/hype tone (e.g., 'Edit Video Secepat Kilat!', 'Bikin Konten Tanpa Pusing'). Match post language."`}
+10. "sub_text": ${isNegativeMode ? `"10-15 words. Directly compare prices. E.g. 'Platform AI rata-rata $20/bulan. Kita cuma Rp 100.000 sekali bayar permanen!' or similar aggressive price anchoring against $20/month AI tools like OpusClip/etc."` : `"8-12 words. Understated benefit. Casual and on-point. Include the Price here if applicable (e.g., 'Mulai Rp 100.000 aja. Sekali bayar.')."`}
+11. "cta_element": "Punchy CTA (e.g., 'Gas Sekarang!', 'Get Access!'). Must be a sleek minimal button or text with an arrow (->). NO stiff corporate CTAs and NO clunky 3D buttons."
+12. "aspect_ratio": "1080x1350" (or 4:5 vertical orientation)
+13. "composition": "rule of thirds, dynamic layout, headline clearly separated from background elements, abundant negative space for copy, NEVER use cluttered geometric shapes behind text."
+14. "negative_prompt": "price tag boxes, starburst badges, clunky layout, text errors, overexposed, busy background, script fonts, Comic Sans, decorative type, low quality"
+
+Output ONLY the raw JSON object. No preamble. No explanation. No markdown. Start with { and end with }.`
+
+    const userMsg = `Post content:\n"""\n${postContent}\n"""\n\nGenerate the flyer JSON prompt now.`
+
+    try {
+      const res = await fetch('/api/auto-threads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: userMsg },
+          ],
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setImagePrompts(prev => ({ ...prev, [selectedAccountId]: data.content }))
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsGeneratingImage(false)
+    }
+  }
+
+  const copyImagePrompt = () => {
+    const prompt = selectedAccountId ? imagePrompts[selectedAccountId] : ''
+    if (!prompt) return
+    navigator.clipboard.writeText(prompt)
+    setCopiedPrompt(true)
+    setTimeout(() => setCopiedPrompt(false), 2000)
   }
 
   const handleSave = async () => {
@@ -426,6 +521,13 @@ Do NOT use the same Hook -> Feature -> CTA structure for all. Give each variatio
                         Thread Post
                       </button>
                       <button 
+                        onClick={() => setActiveTab('image')} 
+                        className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'image' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        Image Prompt
+                      </button>
+                      <button 
                         onClick={() => setActiveTab('metrics')} 
                         className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'metrics' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                       >
@@ -471,6 +573,224 @@ Do NOT use the same Hook -> Feature -> CTA structure for all. Give each variatio
                             value={activePost.content || ""}
                             onChange={(e) => setDayPosts(prev => ({ ...prev, [selectedAccountId]: { ...prev[selectedAccountId], content: e.target.value } }))}
                           />
+                        </div>
+                      )}
+
+                      {activeTab === 'image' && (
+                        <div className="space-y-4 flex flex-col h-full">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h3 className="text-sm font-semibold flex items-center gap-2">
+                                <ImageIcon className="h-4 w-4 text-primary" />
+                                AI Image Prompt (JSON)
+                              </h3>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                                Prompt JSON untuk banana.google — Apple minimalist style, Poppins/Sugo Display font, karakter manusia realistis.
+                              </p>
+                            </div>
+                            <Button
+                              onClick={handleGenerateImagePrompt}
+                              disabled={isGeneratingImage || !activePost?.content?.trim()}
+                              size="sm"
+                              variant="secondary"
+                              className="h-8 text-xs gap-1.5 shadow-sm shrink-0"
+                            >
+                              {isGeneratingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-primary" />}
+                              Generate Prompt
+                            </Button>
+                          </div>
+
+                          <div className="space-y-4">
+                            {/* Art Style picker */}
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Art Style</p>
+                              <div className="flex flex-wrap gap-2">
+                                {([
+                                  { id: 'realistic', label: 'Realistic' },
+                                  { id: 'disney', label: 'Disney 3D' },
+                                  { id: 'cyberpunk', label: 'Cyberpunk' },
+                                  { id: 'minimal', label: 'Minimal Flat' },
+                                ] as const).map(({ id, label }) => (
+                                  <button
+                                    key={id}
+                                    onClick={() => setArtStyle(id)}
+                                    className={`px-3 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                                      artStyle === id
+                                        ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+                                        : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground'
+                                    }`}
+                                  >
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Character picker */}
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Character</p>
+                              <div className="flex flex-wrap gap-2">
+                                {([
+                                  { id: 'human', label: 'Human' },
+                                  { id: 'mascot', label: 'Mascot' },
+                                  { id: 'none', label: 'None' },
+                                ] as const).map(({ id, label }) => (
+                                  <button
+                                    key={id}
+                                    onClick={() => setCharacterType(id)}
+                                    className={`px-3 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                                      characterType === id
+                                        ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+                                        : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground'
+                                    }`}
+                                  >
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Extended Character Options */}
+                              {characterType !== 'none' && (
+                                <div className="pt-2 flex flex-col gap-3 border-t border-border/30 mt-2">
+                                  {characterType === 'human' && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] uppercase font-semibold text-muted-foreground w-14">Gender</span>
+                                      <div className="flex bg-accent/30 rounded-lg p-0.5 border border-border/50">
+                                        {(['any', 'male', 'female'] as const).map((g) => (
+                                          <button
+                                            key={g}
+                                            onClick={() => setCharacterGender(g)}
+                                            className={`px-3 py-1 text-[10px] font-medium rounded-md capitalize transition-colors ${
+                                              characterGender === g ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                                            }`}
+                                          >
+                                            {g}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] uppercase font-semibold text-muted-foreground w-14 shrink-0">Pose</span>
+                                    <Input
+                                      value={customCharacterStyle}
+                                      onChange={(e) => setCustomCharacterStyle(e.target.value)}
+                                      placeholder={characterType === 'human' ? "Bebas mau pose apa... misal: nyengir sambil bawa kopi" : "Misal: ngantuk lihat layar, ketawa lebar"}
+                                      className="h-7 text-xs bg-accent/30 border-border/50 focus-visible:ring-1 focus-visible:ring-primary shadow-none"
+                                    />
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] uppercase font-semibold text-muted-foreground w-14 shrink-0">Pakaian</span>
+                                    <Input
+                                      value={customCharacterOutfit}
+                                      onChange={(e) => setCustomCharacterOutfit(e.target.value)}
+                                      placeholder={characterType === 'human' ? "Misal: jaket kulit hitam & kaos polos" : "Misal: kacamata hitam neon & kalung emas"}
+                                      className="h-7 text-xs bg-accent/30 border-border/50 focus-visible:ring-1 focus-visible:ring-primary shadow-none"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Background style picker */}
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Background (for Realistic/3D)</p>
+                              <div className="flex flex-wrap gap-2">
+                                {([
+                                  { id: 'white-studio',  label: 'White Studio',    swatch: '#F8F8F8', border: '#E0E0E0' },
+                                  { id: 'dark-studio',   label: 'Dark Studio',     swatch: '#1C1C1C', border: '#3A3A3A' },
+                                  { id: 'warm-minimal',  label: 'Warm Minimal',    swatch: '#F0EBE0', border: '#D4C9B8' },
+                                  { id: 'outdoor-cafe',  label: 'Outdoor Café',    swatch: '#C8D8C8', border: '#A0B8A0' },
+                                  { id: 'gradient-mono', label: 'Mono Gradient',   swatch: 'linear-gradient(135deg,#F0F0F0,#D8D8D8)', border: '#C8C8C8' },
+                                  { id: 'concrete-loft', label: 'Concrete Loft',   swatch: '#B8B4AE', border: '#9A9690' },
+                                ] as const).map(({ id, label, swatch, border }) => (
+                                  <button
+                                    key={id}
+                                    onClick={() => setBgStyle(id)}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                                      bgStyle === id
+                                        ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+                                        : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground'
+                                    }`}
+                                  >
+                                    <span
+                                      className="h-3.5 w-3.5 rounded-sm shrink-0 border"
+                                      style={{ background: swatch, borderColor: border }}
+                                    />
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {/* Copywriting Setup */}
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Copywriting Setup</p>
+                              <div className="flex items-center gap-3 bg-accent/30 p-2.5 rounded-xl border border-border/50">
+                                <button
+                                  onClick={() => setIsNegativeMode(prev => !prev)}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-[11px] font-semibold transition-all shrink-0 ${
+                                    isNegativeMode
+                                      ? 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-400 shadow-sm'
+                                      : 'border-border/50 bg-background text-muted-foreground hover:border-border hover:text-foreground'
+                                  }`}
+                                >
+                                  <div className={`h-2.5 w-2.5 rounded-full border border-current transition-colors ${isNegativeMode ? 'bg-current' : 'bg-transparent'}`} />
+                                  Negative Mode
+                                </button>
+                                <p className="text-[10px] text-muted-foreground leading-snug">
+                                  Aktifkan ini untuk membuat copy teks yang agak agresif & membandingkan dengan AI $20/bulan (seperti OpusClip) untuk menonjolkan harga Rp 100.000 kamu.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {selectedAccountId && imagePrompts[selectedAccountId] ? (
+                            <div className="flex flex-col mt-4 border-t border-border/30 pt-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">JSON Output</span>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">Ready</span>
+                                </div>
+                                <button
+                                  onClick={copyImagePrompt}
+                                  className="flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-lg hover:bg-primary/5"
+                                >
+                                  {copiedPrompt ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                  {copiedPrompt ? 'Copied!' : 'Copy JSON'}
+                                </button>
+                              </div>
+                              <div className="min-h-[300px] max-h-[500px] w-full overflow-auto rounded-xl border border-border/50 bg-zinc-950/80 dark:bg-black/50 text-xs">
+                                <pre className="p-4 leading-relaxed text-green-400 whitespace-pre-wrap break-words font-mono">{(() => {
+                                  try {
+                                    return JSON.stringify(JSON.parse(imagePrompts[selectedAccountId]), null, 2)
+                                  } catch {
+                                    return imagePrompts[selectedAccountId]
+                                  }
+                                })()}</pre>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground/60 mt-2 flex items-center gap-1">
+                                <ImageIcon className="h-3 w-3" />
+                                Paste JSON ini ke banana.google atau AI image generator lainnya.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 bg-muted/20 rounded-xl border border-dashed border-border/50 min-h-[260px] px-6">
+                              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-border/50">
+                                <ImageIcon className="h-7 w-7 text-primary/40" />
+                              </div>
+                              <div className="space-y-1.5">
+                                <p className="text-sm font-semibold text-foreground/60">Belum ada prompt</p>
+                                <p className="text-xs text-muted-foreground/70 max-w-[200px] leading-relaxed">
+                                  {!activePost?.content?.trim()
+                                    ? 'Generate post-nya dulu di tab Thread Post, lalu balik sini.'
+                                    : 'Klik Generate Prompt untuk buat flyer JSON-nya.'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
