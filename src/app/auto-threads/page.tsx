@@ -64,6 +64,7 @@ export default function AutoThreadsPage() {
   const [characterGender, setCharacterGender] = useState<string>('any')
   const [customCharacterStyle, setCustomCharacterStyle] = useState<string>('')
   const [customCharacterOutfit, setCustomCharacterOutfit] = useState<string>('')
+  const [targetMarket, setTargetMarket] = useState<string>('')
   const [isNegativeMode, setIsNegativeMode] = useState(false)
 
   // Fetch currently logged in user profile_id equivalent
@@ -288,15 +289,16 @@ CRITICAL DESIGN RULES — Follow exactly:
 3. "typography_style": "Poppins Regular for sub-text and CTA, Sugo Display Bold for main headline, NO drop shadows, NO gradients on text, tight and punchy layout"
 4. "character": "${selectedChar}. Make them the emotional anchor if present."
 5. "background": "${selectedBg}"
-6. "scene": "Product (thin laptop showing video software) + character (if any) + background. Seamless integration."
+6. "scene": "Product (thin laptop showing a bright white minimalist modern video editing interface with timeline and clips) + character (if any) + background. Seamless integration."
 7. "mood": "catchy, energetic, scroll-stopping, confident."
 8. "pricing_typography": "IF the post mentions a price, force formatting to exactly 'Rp 100.000' (or specific number). CRITICAL: DO NOT put the price inside a clunky box, starburst, or ugly badge. Integrate the price elegantly as sleek floating text or as a seamless part of the modern typography layout. Make it look premium, clean, and aesthetic."
 9. "main_text": ${isNegativeMode ? `"Max 8 words. AGGRESSIVE COMPARISON CTA. Highlight that other tools are a $20/month subscription rip-off, while this tool is way cheaper/one-time payment."` : `"Max 6 words. CATCHY and PUNCHY. NEVER formal/kaku. Use casual/hype tone (e.g., 'Edit Video Secepat Kilat!', 'Bikin Konten Tanpa Pusing'). Match post language."`}
 10. "sub_text": ${isNegativeMode ? `"10-15 words. Directly compare prices. E.g. 'Platform AI rata-rata $20/bulan. Kita cuma Rp 100.000 sekali bayar permanen!' or similar aggressive price anchoring against $20/month AI tools like OpusClip/etc."` : `"8-12 words. Understated benefit. Casual and on-point. Include the Price here if applicable (e.g., 'Mulai Rp 100.000 aja. Sekali bayar.')."`}
-11. "cta_element": "Punchy CTA (e.g., 'Gas Sekarang!', 'Get Access!'). Must be a sleek minimal button or text with an arrow (->). NO stiff corporate CTAs and NO clunky 3D buttons."
+11. "cta_element": "Punchy CTA (e.g., 'Gas Sekarang!', 'Get Access!'). Must be a sleek minimal button or text with an arrow (->). NO stiff corporate CTAs and NO clunky 3D buttons. TARGET AUDIENCE: ${targetMarket ? `The copy MUST specifically call out '${targetMarket}' (e.g., 'Khusus buat para ${targetMarket}', 'Solusi pas buat ${targetMarket}').` : 'General audience.'}"
 12. "aspect_ratio": "1080x1350" (or 4:5 vertical orientation)
 13. "composition": "rule of thirds, dynamic layout, headline clearly separated from background elements, abundant negative space for copy, NEVER use cluttered geometric shapes behind text."
 14. "negative_prompt": "price tag boxes, starburst badges, clunky layout, text errors, overexposed, busy background, script fonts, Comic Sans, decorative type, low quality"
+15. "watermark": "ALWAYS include the exact text 'NorraClip' in a sleek, small, minimalist font centered at the very bottom edge of the flyer design."
 
 Output ONLY the raw JSON object. No preamble. No explanation. No markdown. Start with { and end with }.`
 
@@ -728,6 +730,17 @@ Output ONLY the raw JSON object. No preamble. No explanation. No markdown. Start
                             {/* Copywriting Setup */}
                             <div className="space-y-2">
                               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Copywriting Setup</p>
+
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[10px] uppercase font-semibold text-muted-foreground w-20 shrink-0">Target Market</span>
+                                <Input
+                                  value={targetMarket}
+                                  onChange={(e) => setTargetMarket(e.target.value)}
+                                  placeholder="Misal: Content Creator, Editor, Agency, dll"
+                                  className="h-7 text-xs bg-accent/30 border-border/50 focus-visible:ring-1 focus-visible:ring-primary shadow-none flex-1"
+                                />
+                              </div>
+
                               <div className="flex items-center gap-3 bg-accent/30 p-2.5 rounded-xl border border-border/50">
                                 <button
                                   onClick={() => setIsNegativeMode(prev => !prev)}
