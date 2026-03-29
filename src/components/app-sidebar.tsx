@@ -33,6 +33,7 @@ const items = [
   { title: "Journaling", url: "/journaling", icon: BookOpen },
   { title: "Targets", url: "/targets", icon: Target },
   { title: "Auto Threads", url: "/auto-threads", icon: LayoutDashboard },
+  { title: "Threads Monitor", url: "/auto-threads/monitor", icon: BarChart2 },
   { title: "Team", url: "/team", icon: Users },
   { title: "Profile", url: "/profile", icon: User },
 ]

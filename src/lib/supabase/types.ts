@@ -462,6 +462,50 @@ export type Database = {
           },
         ]
       }
+      tracked_posts: {
+        Row: {
+          id: string
+          profile_id: string
+          url: string
+          content_preview: string | null
+          views_count: number | null
+          likes_count: number | null
+          replies_count: number | null
+          last_checked_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          url: string
+          content_preview?: string | null
+          views_count?: number | null
+          likes_count?: number | null
+          replies_count?: number | null
+          last_checked_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          url?: string
+          content_preview?: string | null
+          views_count?: number | null
+          likes_count?: number | null
+          replies_count?: number | null
+          last_checked_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracked_posts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       transactions: {
         Row: {
           amount: number

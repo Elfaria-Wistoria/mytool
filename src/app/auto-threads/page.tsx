@@ -149,14 +149,13 @@ export default function AutoThreadsPage() {
 Your goal is to CONVERT clippers/repurposers to a desktop app that clips long videos into shorts natively.
 
 CRITICAL RULES FOR PSYCHOLOGY & TONE:
-1. NO PREDICTABLE AI TEMPLATES. DO NOT use the words "viral" or "meledak" excessively. Use credible terms like "high retention", "siap FYP", "scroll-stopping", or "lebih gampang ditonton sampai habis".
-2. TONE: Confident, relatable creator/hustler. Do NOT be overly aggressive or attacking. Share frustrations as a fellow creator (e.g., "Gue sempet capek bayar langganan Web AI...", "Bikin video pakai OpusClip atau Vizard emang cepet, tapi harganya lumayan...").
-3. SOCIAL PROOF: Always inject subtle social proof (e.g., "Udah dipake banyak creator", "Gue pake sendiri buat...", "Hasilnya: bikin 10 klip cuma 5 menit", "Makin banyak creator pelan-pelan pindah ke lokal").
-4. THE REVEAL: Subtly introduce the app as the smarter way: One-time lifetime license (NO subs), runs locally on PC, BYO Deepseek API key, maximum privacy. 
-5. DIVERSE CTAs: DO NOT just say "Klik link di bio". Use varied, low-friction CTAs: "Liat demonya dulu di bio", "Cek sebelum harga lifetime-nya naik", "Bandingin sendiri sama tool langganan lu sekarang", "Coba lihat bedanya di bio gue".
+1. TONE: Confident, direct creator/hustler pushing a disruptor product. No cheesy marketer talk.
+2. HOOKS: DO NOT write long stories/anecdotes or say "Gue sempet capek" or "Dulu gue pake". Dive straight into a punchy statement or value hook. NEVER use the words "alat", "tool", or "software" — only use "app" or "desktop app".
+3. VALUE DROPS: Mention extreme cost-effectiveness (e.g., $5 API for 1600+ videos), the one-time lifetime license model, and 100% FREE lifetime updates. Emphasize that user feedback shapes every update and subtitle/hook styles are constantly updated to match the newest viral trends. Stop paying monthly web AI fees.
+4. CTAs: NEVER say "cek bio", "lihat demo", or "klik link di bio". The link is always directly below. The CTA must be exactly like: "So kalo lo minat bisa klik link di bawah :" or "Untuk app nya bisa lo dapetin di :".
+5. ENDING: DO NOT provide any "Flyer narrative" or visual descriptions at the end. Only output exactly 3-5 hyper-targeted HASHTAGS after the CTA.
 
-LANGUAGE: You MUST output in ${postLanguage === 'id' ? 'Bahasa Indonesia gaul/kasual (Gue/Lu, Twitter/TikTok native style). Absolutely NO robotic words like "apakah Anda".' : 'Conversational, native English hustle-Twitter style.'}
-6. ENDING: Provide a VISUAL/FLYER NARRATIVE at the bottom, and exactly 3-5 hyper-targeted HASHTAGS.`
+LANGUAGE: You MUST output in ${postLanguage === 'id' ? 'Bahasa Indonesia gaul/kasual (Gue/Lu, Twitter/TikTok native style). Absolutely NO robotic words like "apakah Anda".' : 'Conversational, native English hustle-Twitter style.'}`
 
     let userPrompt = ''
 
@@ -165,11 +164,10 @@ LANGUAGE: You MUST output in ${postLanguage === 'id' ? 'Bahasa Indonesia gaul/ka
       
       if (postCount > 1) {
         instruction += `\n\nCRITICAL: You are generating EXACTLY ${postCount} variations. YOU MUST VARY THE FORMATS COMPLETELY:
-- Mix Hard Sell and Soft Sell.
-- Include Storytelling formats (e.g., How I changed my workflow).
-- Include Mini Case Studies (e.g., Results of using a local tool vs Web AI like OpusClip).
+- Include direct value propositions.
+- Include comparison formats (e.g., local app vs Web AI like OpusClip).
 - Include Controversial Opinions (e.g., Why paying monthly for Web-based clippers is a trap).
-Do NOT use the same Hook -> Feature -> CTA structure for all. Give each variation a numbered title.`
+Give each variation a numbered title.`
       }
 
       userPrompt = `Write ${postCount > 1 ? `${postCount} wildly distinct variations of ` : ''}today's short-form hook and caption for ${platform} in ${postLanguage === 'id' ? 'natural Indonesian' : 'English'}.`
@@ -178,11 +176,10 @@ Do NOT use the same Hook -> Feature -> CTA structure for all. Give each variatio
       
       if (postCount > 1) {
         instruction += `\n\nCRITICAL: You are generating EXACTLY ${postCount} variations. YOU MUST VARY THE FORMATS COMPLETELY:
-- Mix Hard Sell and Soft Sell.
-- Include Storytelling formats (e.g., How I changed my workflow).
-- Include Mini Case Studies (e.g., Results of using a local tool vs an expensive Web AI).
-- Include Controversial Opinions/Questions.
-Do NOT use the same Hook -> Feature -> CTA structure for all. Give each variation a numbered title.`
+- Include direct value propositions.
+- Include punchy comparison hooks (e.g., local app vs expensive Web AI subscriptions).
+- Include Controversial Opinions (e.g., Why paying monthly for Web-based clippers is a trap).
+Give each variation a numbered title.`
       }
 
       userPrompt = `Write ${postCount > 1 ? `${postCount} wildly distinct variations of ` : ''}today's text post for ${platform} in ${postLanguage === 'id' ? 'natural Indonesian' : 'English'}.`
