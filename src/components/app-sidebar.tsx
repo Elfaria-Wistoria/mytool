@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useState } from "react"
-import { Calendar, LayoutDashboard, BarChart2, Smartphone, LogOut, Loader2, Bug, Wallet, Kanban, BookOpen, Target, Users, User, MessageSquare, MonitorDot, Key } from "lucide-react"
+import { Calendar, LayoutDashboard, BarChart2, Smartphone, LogOut, Loader2, Bug, Wallet, Kanban, BookOpen, Target, Users, User, MessageSquare, MonitorDot, Key, Zap } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -37,7 +37,8 @@ const items = [
   { title: "Team", url: "/team", icon: Users },
   { title: "Profile", url: "/profile", icon: User },
   { title: "Norraclip Monitor", url: "/snipie-monitor", icon: MonitorDot },
-  { title: "Activation Codes", url: "/activation-codes", icon: Key },
+  { title: "Activation Codes",  url: "/activation-codes", icon: Key },
+  { title: "Lynk Payments",     url: "/lynk-payments", icon: Zap },
 ]
 
 export function AppSidebar() {
