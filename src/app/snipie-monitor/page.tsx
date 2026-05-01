@@ -189,8 +189,17 @@ export default function NorraclipMonitorPage() {
     toast.success(`Status creator: ${STATUS_MAP[status]?.label ?? status}`)
   }
   const updatePromo      = async (id: string, status: string) => {
-    const { error } = await snipieClient.from("promotion_submissions").update({ status }).eq("id", id)
-    if (error) { toast.error("Gagal memperbarui"); return }
+    console.log("[updatePromo] id:", id, "status:", status)
+    const { data, error } = await snipieClient
+      .from("promotion_submissions")
+      .update({ status })
+      .eq("id", id)
+      .select()
+    console.log("[updatePromo] result:", { data, error })
+    if (error) {
+      toast.error(`Gagal: ${error.message ?? error.code ?? "Unknown"}`)
+      return
+    }
     setPromotions(p => p.map(x => x.id === id ? { ...x, status } : x))
     toast.success(`Status promosi: ${STATUS_MAP[status]?.label ?? status}`)
   }
