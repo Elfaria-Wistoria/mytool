@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import {
   Users, Bug, Megaphone, Wallet, RefreshCw, ExternalLink,
   CheckCircle2, Clock, XCircle, Circle, AlertTriangle,
-  TrendingUp, ChevronDown, Loader2, Activity, Shield,
+  TrendingUp, ChevronDown, Loader2, Activity, Shield, Banknote,
 } from "lucide-react"
 import {
   snipieClient,
@@ -159,6 +159,8 @@ export default function NorraclipMonitorPage() {
   const [refreshing, setRefreshing]   = useState(false)
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [tab, setTab] = useState<"all" | "creators" | "bugs" | "promos" | "withdrawals" | "users">("all")
+  const [rewardInputs, setRewardInputs] = useState<Record<string, string>>({})
+  const [processingId, setProcessingId] = useState<string | null>(null)
 
   const fetchAll = useCallback(async (soft = false) => {
     soft ? setRefreshing(true) : setLoading(true)
@@ -172,7 +174,18 @@ export default function NorraclipMonitorPage() {
     ])
     if (c.data) setCreators(c.data as CreatorApplication[])
     if (b.data) setBugs(b.data as BugReport[])
-    if (p.data) setPromotions(p.data as PromotionSubmission[])
+    if (p.data) {
+      const promos = p.data as PromotionSubmission[]
+      setPromotions(promos)
+      // Auto-fill reward = views_claimed × 1 (Rp 1/view) untuk yang pending
+      const autoRewards: Record<string, string> = {}
+      promos.forEach(s => {
+        if (s.status === "pending") {
+          autoRewards[s.id] = String(s.views_claimed * 1)
+        }
+      })
+      setRewardInputs(prev => ({ ...autoRewards, ...prev }))
+    }
     if (w.data) setWithdrawals(w.data as WithdrawalRequest[])
     if (u.data) setUsers(u.data as SnipieUser[])
     if (ac.data) setCodes(ac.data as ActivationCode[])
@@ -188,14 +201,11 @@ export default function NorraclipMonitorPage() {
     setCreators(p => p.map(c => c.id === id ? { ...c, status } : c))
     toast.success(`Status creator: ${STATUS_MAP[status]?.label ?? status}`)
   }
-  const updatePromo      = async (id: string, status: string) => {
-    console.log("[updatePromo] id:", id, "status:", status)
-    const { data, error } = await snipieClient
+  const updatePromo = async (id: string, status: string) => {
+    const { error } = await snipieClient
       .from("promotion_submissions")
       .update({ status })
       .eq("id", id)
-      .select()
-    console.log("[updatePromo] result:", { data, error })
     if (error) {
       toast.error(`Gagal: ${error.message ?? error.code ?? "Unknown"}`)
       return
@@ -203,9 +213,58 @@ export default function NorraclipMonitorPage() {
     setPromotions(p => p.map(x => x.id === id ? { ...x, status } : x))
     toast.success(`Status promosi: ${STATUS_MAP[status]?.label ?? status}`)
   }
+
+  // Approve + set reward_amount sekaligus (sama seperti desktop AdminPanel)
+  const handleApprovePromo = async (promo: PromotionSubmission) => {
+    // Fallback otomatis ke views_claimed × 1 jika input dikosongkan
+    const raw = rewardInputs[promo.id]
+    const reward = raw && raw.trim() !== "" ? parseFloat(raw) : promo.views_claimed * 1
+    if (isNaN(reward) || reward < 0) {
+      toast.error("Nilai reward tidak valid")
+      return
+    }
+    setProcessingId(promo.id)
+    const { error } = await snipieClient
+      .from("promotion_submissions")
+      .update({ status: "approved", reward_amount: reward })
+      .eq("id", promo.id)
+    setProcessingId(null)
+    if (error) {
+      toast.error(`Gagal approve: ${error.message ?? error.code}`)
+      return
+    }
+    setPromotions(p => p.map(x => x.id === promo.id ? { ...x, status: "approved", reward_amount: reward } : x))
+    toast.success(`Approved! Reward: ${idr(reward)}`)
+  }
+
+  const handleRejectPromo = async (id: string) => {
+    setProcessingId(id)
+    const { error } = await snipieClient
+      .from("promotion_submissions")
+      .update({ status: "rejected" })
+      .eq("id", id)
+    setProcessingId(null)
+    if (error) {
+      toast.error(`Gagal reject: ${error.message ?? error.code}`)
+      return
+    }
+    setPromotions(p => p.map(x => x.id === id ? { ...x, status: "rejected" } : x))
+    toast.success("Submission ditolak")
+  }
   const updateWithdrawal = async (id: string, status: string) => {
-    const { error } = await snipieClient.from("withdrawal_requests").update({ status }).eq("id", id)
-    if (error) { toast.error("Gagal memperbarui"); return }
+    console.log("[updateWithdrawal] id:", id, "status:", status)
+    setProcessingId(id)
+    const { data, error } = await snipieClient
+      .from("withdrawal_requests")
+      .update({ status })
+      .eq("id", id)
+      .select()
+    console.log("[updateWithdrawal] result:", { data, error })
+    setProcessingId(null)
+    if (error) {
+      toast.error(`Gagal update penarikan: ${error.message ?? error.code ?? JSON.stringify(error)}`)
+      return
+    }
     setWithdrawals(p => p.map(w => w.id === id ? { ...w, status } : w))
     toast.success(`Status penarikan: ${STATUS_MAP[status]?.label ?? status}`)
   }
@@ -414,9 +473,58 @@ export default function NorraclipMonitorPage() {
                         </div>
                         <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
                           <span className="font-medium">{p.views_claimed.toLocaleString("id-ID")} views</span>
-                          <span className="font-semibold text-emerald-600">{idr(p.reward_amount ?? 0)} reward</span>
+                          {p.status !== "pending" && (
+                            <span className="font-semibold text-emerald-600">{idr(p.reward_amount ?? 0)} reward</span>
+                          )}
                           <span>{timeAgo(p.created_at)}</span>
                         </div>
+
+                        {/* ── Approve panel (hanya untuk pending) ── */}
+                        {p.status === "pending" && (
+                          <div className="mt-3 flex flex-col gap-2">
+                            {/* Hint auto-kalkulasi */}
+                            <p className="text-[11px] text-muted-foreground">
+                              Auto-kalkulasi:{" "}
+                              <span className="font-semibold text-amber-600">
+                                {idr(p.views_claimed * 1)}
+                              </span>{" "}
+                              ({p.views_claimed.toLocaleString("id-ID")} views × Rp 1)
+                            </p>
+                            {/* Input override */}
+                            <div className="flex items-center gap-2">
+                              <div className="relative">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-muted-foreground pointer-events-none">Rp</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1000"
+                                  placeholder={String(p.views_claimed * 1)}
+                                  value={rewardInputs[p.id] ?? ""}
+                                  onChange={e => setRewardInputs(prev => ({ ...prev, [p.id]: e.target.value }))}
+                                  className="h-8 w-36 rounded-[8px] border border-border bg-muted/60 pl-7 pr-2 text-[12px] text-foreground focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                />
+                              </div>
+                              <button
+                                onClick={() => handleApprovePromo(p)}
+                                disabled={processingId === p.id}
+                                className="inline-flex items-center gap-1.5 rounded-[8px] bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 h-8 transition-colors disabled:opacity-50"
+                              >
+                                {processingId === p.id
+                                  ? <Loader2 className="h-3 w-3 animate-spin" />
+                                  : <CheckCircle2 className="h-3 w-3" />}
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleRejectPromo(p.id)}
+                                disabled={processingId === p.id}
+                                className="inline-flex items-center gap-1.5 rounded-[8px] border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800/40 hover:bg-red-100 text-red-600 dark:text-red-400 text-[11px] font-bold px-3 h-8 transition-colors disabled:opacity-50"
+                              >
+                                <XCircle className="h-3 w-3" />
+                                Tolak
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-2.5 shrink-0">
                         {p.screenshot_url && (
@@ -425,8 +533,16 @@ export default function NorraclipMonitorPage() {
                               className="h-14 w-20 object-cover rounded-[10px] border border-border bg-muted" />
                           </a>
                         )}
-                        <StatusDropdown status={p.status} options={["pending","approved","rejected"]}
-                          onChange={s => updatePromo(p.id, s)} />
+                        {/* StatusDropdown hanya untuk non-pending (re-open / re-reject) */}
+                        {p.status !== "pending" && (
+                          <StatusDropdown status={p.status} options={["pending","approved","rejected"]}
+                            onChange={s => updatePromo(p.id, s)} />
+                        )}
+                        {p.status === "pending" && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 dark:bg-amber-900/30 dark:border-amber-800/40 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                            <Clock className="h-3 w-3" /> Pending
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -443,16 +559,45 @@ export default function NorraclipMonitorPage() {
                   {withdrawals.map(w => (
                     <div key={w.id} className="flex items-center gap-4 px-5 py-4 hover:bg-muted/30 transition-colors">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-emerald-50 dark:bg-emerald-950/40">
-                        <Shield className="h-4 w-4 text-emerald-500" />
+                        <Wallet className="h-4 w-4 text-emerald-500" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[14px] font-bold text-foreground">{idr(w.amount)}</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
                           via <span className="font-medium text-foreground">{w.payment_method}</span> · {fmtDate(w.created_at)}
                         </p>
+                        {/* Tombol aksi langsung untuk pending */}
+                        {w.status === "pending" && (
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => updateWithdrawal(w.id, "paid")}
+                              disabled={processingId === w.id}
+                              className="inline-flex items-center gap-1.5 rounded-[8px] bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 h-7 transition-colors disabled:opacity-50"
+                            >
+                              {processingId === w.id
+                                ? <Loader2 className="h-3 w-3 animate-spin" />
+                                : <Banknote className="h-3 w-3" />}
+                              Tandai Lunas
+                            </button>
+                            <button
+                              onClick={() => updateWithdrawal(w.id, "rejected")}
+                              disabled={processingId === w.id}
+                              className="inline-flex items-center gap-1.5 rounded-[8px] border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800/40 hover:bg-red-100 text-red-600 dark:text-red-400 text-[11px] font-bold px-3 h-7 transition-colors disabled:opacity-50"
+                            >
+                              <XCircle className="h-3 w-3" /> Tolak
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <StatusDropdown status={w.status} options={["pending","paid","rejected"]}
-                        onChange={s => updateWithdrawal(w.id, s)} />
+                      {/* StatusDropdown hanya untuk non-pending */}
+                      {w.status !== "pending" ? (
+                        <StatusDropdown status={w.status} options={["pending","paid","rejected"]}
+                          onChange={s => updateWithdrawal(w.id, s)} />
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 dark:bg-amber-900/30 dark:border-amber-800/40 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 shrink-0">
+                          <Clock className="h-3 w-3" /> Pending
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
