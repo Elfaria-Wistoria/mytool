@@ -179,12 +179,37 @@ function PaymentRow({ p }: { p: LynkPayment }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function LynkPaymentsPage() {
-  const [payments, setPayments] = useState<LynkPayment[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [totalCount, setTotalCount] = useState(0)
-  const [page, setPage]         = useState(0)
+  const [payments, setPayments]       = useState<LynkPayment[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [refreshing, setRefreshing]   = useState(false)
+  const [totalCount, setTotalCount]   = useState(0)
+  const [totalRevenue, setTotalRevenue] = useState(0)
+  const [todayRevenue, setTodayRevenue] = useState(0)
+  const [todayCount, setTodayCount]   = useState(0)
+  const [page, setPage]               = useState(0)
   const PAGE_SIZE = 30
+
+  // Fetch aggregate stats from ALL rows
+  const fetchStats = useCallback(async () => {
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const [allStats, todayStats] = await Promise.all([
+      snipieClient.from("lynk_payments").select("grand_total"),
+      snipieClient.from("lynk_payments")
+        .select("grand_total")
+        .gte("created_at", todayStart.toISOString()),
+    ])
+
+    if (allStats.data) {
+      setTotalRevenue(allStats.data.reduce((s, r) => s + (r.grand_total ?? 0), 0))
+      setTotalCount(allStats.data.length)
+    }
+    if (todayStats.data) {
+      setTodayRevenue(todayStats.data.reduce((s, r) => s + (r.grand_total ?? 0), 0))
+      setTodayCount(todayStats.data.length)
+    }
+  }, [])
 
   const fetchPayments = useCallback(async (soft = false) => {
     soft ? setRefreshing(true) : setLoading(true)
@@ -199,15 +224,9 @@ export default function LynkPaymentsPage() {
   }, [page])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
+  useEffect(() => { fetchStats() }, [fetchStats])
 
-  // Stats
-  const totalRevenue = payments.reduce((a, p) => a + (p.grand_total ?? 0), 0)
-  const totalItems   = payments.reduce((a, p) => a + (p.items?.length ?? 0), 0)
-  const todayCount   = payments.filter(p => {
-    const d = new Date(p.created_at)
-    const now = new Date()
-    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-  }).length
+  const totalItems = payments.reduce((a, p) => a + (p.items?.length ?? 0), 0)
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
@@ -217,8 +236,17 @@ export default function LynkPaymentsPage() {
       .channel("lynk_payments_realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "lynk_payments" },
         (payload) => {
-          setPayments(prev => [payload.new as LynkPayment, ...prev])
+          const newPayment = payload.new as LynkPayment
+          setPayments(prev => [newPayment, ...prev])
           setTotalCount(c => c + 1)
+          setTotalRevenue(r => r + (newPayment.grand_total ?? 0))
+          // check if today
+          const d = new Date(newPayment.created_at)
+          const now = new Date()
+          if (d.toDateString() === now.toDateString()) {
+            setTodayCount(c => c + 1)
+            setTodayRevenue(r => r + (newPayment.grand_total ?? 0))
+          }
         })
       .subscribe()
     return () => { snipieClient.removeChannel(channel) }
@@ -251,10 +279,10 @@ export default function LynkPaymentsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Transaksi", value: totalCount,          color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/40", icon: CreditCard,  fmt: (v: number) => v.toLocaleString("id-ID") },
-          { label: "Revenue (halaman ini)", value: totalRevenue,  color: "text-teal-500",    bg: "bg-teal-50 dark:bg-teal-950/40",       icon: TrendingUp,  fmt: idr },
-          { label: "Total Items",     value: totalItems,          color: "text-blue-500",    bg: "bg-blue-50 dark:bg-blue-950/40",       icon: ShoppingBag, fmt: (v: number) => v.toLocaleString("id-ID") },
-          { label: "Hari Ini",        value: todayCount,          color: "text-violet-500",  bg: "bg-violet-50 dark:bg-violet-950/40",   icon: CheckCircle2,fmt: (v: number) => v.toString() },
+          { label: "Total Transaksi",  value: totalCount,    color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/40",  icon: CreditCard,   fmt: (v: number) => v.toLocaleString("id-ID") },
+          { label: "Total Revenue",    value: totalRevenue,  color: "text-teal-500",    bg: "bg-teal-50 dark:bg-teal-950/40",        icon: TrendingUp,   fmt: idr },
+          { label: "Revenue Hari Ini", value: todayRevenue,  color: "text-violet-500",  bg: "bg-violet-50 dark:bg-violet-950/40",    icon: ShoppingBag,  fmt: idr },
+          { label: "Transaksi Hari Ini",value: todayCount,   color: "text-blue-500",    bg: "bg-blue-50 dark:bg-blue-950/40",        icon: CheckCircle2, fmt: (v: number) => v.toString() },
         ].map((s, i) => (
           <div key={s.label} className="apple-card px-4 py-4 animate-stagger-item" style={{ "--i": i } as React.CSSProperties}>
             <div className={`flex h-9 w-9 items-center justify-center rounded-[10px] mb-2.5 ${s.bg}`}>
