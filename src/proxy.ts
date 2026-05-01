@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public paths — always allow
-  const publicPaths = ["/auth/login", "/auth/signup", "/auth/callback"]
+  const publicPaths = ["/auth/login", "/auth/signup", "/auth/callback", "/api/webhooks/"]
   if (publicPaths.some(p => pathname.startsWith(p))) {
     return supabaseResponse
   }
