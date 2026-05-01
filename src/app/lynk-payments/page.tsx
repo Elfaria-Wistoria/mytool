@@ -270,7 +270,7 @@ export default function LynkPaymentsPage() {
       <div className="rounded-[12px] border border-blue-200/60 bg-blue-50/50 dark:border-blue-800/40 dark:bg-blue-950/20 px-4 py-3">
         <p className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-1">Webhook URL</p>
         <code className="text-[12px] text-blue-800 dark:text-blue-300 font-mono select-all break-all">
-          {typeof window !== "undefined" ? window.location.origin : "https://your-domain.com"}/api/webhooks/lynk
+          https://mytool-silk.vercel.app/api/webhooks/lynk
         </code>
         <p className="text-[11px] text-blue-600/70 dark:text-blue-500 mt-1">
           Daftarkan URL ini di dashboard Lynk.id → tambahkan <code className="bg-blue-100 dark:bg-blue-900/40 px-1 rounded">LYNK_MERCHANT_KEY</code> ke .env.local setelah mendapat merchant key.
